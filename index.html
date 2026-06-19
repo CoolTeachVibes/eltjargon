@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELT Jargon Master - Student Study Suite</title>
+  
+  <!-- React 18 & ReactDOM 18 (Stable production loads via CDN) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone JSX compiler for native browser compilation on GitHub Pages -->
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+  
+  <!-- Tailwind CSS for robust, modern utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              950: '#060a13',
+              900: '#0f172a',
+              800: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth CSS transition styles for flashcard 3D flips */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+
+    /* Spark explosion animations */
+    @keyframes spark-explode {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+      }
+    }
+    .animate-spark {
+      animation: spark-explode 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Root mount point for the React App -->
+  <div id="root"></div>
+
+  <!-- React JSX Logic (Explicit presets to prevent rendering crashes on production/GH Pages) -->
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useMemo, useEffect } = React;
+
+    // Fully comprehensive 98-term dataset imported directly from user's CSV
+    const DEFAULT_GLOSSARY = [
+      // 1. Core Acronyms & Professional Terms
+      { category: "Core Acronyms & Professional Terms", term: "ELT", definition: "English Language Teaching." },
+      { category: "Core Acronyms & Professional Terms", term: "TEFL", definition: "Teaching English as a Foreign Language (teaching English in countries where it is not the primary language)." },
+      { category: "Core Acronyms & Professional Terms", term: "TESOL", definition: "Teaching English to Speakers of Other Languages (an umbrella term covering both TEFL and TESL)." },
+      { category: "Core Acronyms & Professional Terms", term: "TESL", definition: "Teaching English as a Second Language (teaching English to immigrants/refugees in an English-speaking country)." },
+      { category: "Core Acronyms & Professional Terms", term: "EFL", definition: "English as a Foreign Language." },
+      { category: "Core Acronyms & Professional Terms", term: "ESL", definition: "English as a Second Language." },
+      { category: "Core Acronyms & Professional Terms", term: "ELL", definition: "English Language Learner (the student)." },
+      { category: "Core Acronyms & Professional Terms", term: "EAP", definition: "English for Academic Purposes (focusing on university/college prep)." },
+      { category: "Core Acronyms & Professional Terms", term: "ESP", definition: "English for Specific Purposes (tailored to specific professions e.g. Aviation English Medical English)." },
+      { category: "Core Acronyms & Professional Terms", term: "CELTA", definition: "Certificate in Teaching English to Speakers of Other Languages (a widely recognized Cambridge teaching qualification)." },
+      { category: "Core Acronyms & Professional Terms", term: "Delta", definition: "Diploma in Teaching English to Speakers of Other Languages (an advanced Cambridge qualification)." },
+      { category: "Core Acronyms & Professional Terms", term: "EMI", definition: "English as a Medium of Instruction (teaching academic subjects in English in non-English speaking countries)." },
+      { category: "Core Acronyms & Professional Terms", term: "L1", definition: "First Language (native language / mother tongue)." },
+      { category: "Core Acronyms & Professional Terms", term: "L2", definition: "Second Language (target language being learned)." },
+
+      // 2. Methodology & Approaches
+      { category: "Methodology & Approaches", term: "CLIL (Content and Language Integrated Learning)", definition: "Teaching a subject (like science or history) through a foreign language." },
+      { category: "Methodology & Approaches", term: "Communicative Approach (CLT)", definition: "An approach to language teaching that emphasizes communication and interaction." },
+      { category: "Methodology & Approaches", term: "Direct Method", definition: "A method where teaching is done entirely in the target language (no translation)." },
+      { category: "Methodology & Approaches", term: "Grammar-Translation Method", definition: "A traditional method focusing on grammar rules and translating written texts." },
+      { category: "Methodology & Approaches", term: "Audio-Lingual Method (ALM)", definition: "A method based on behaviorist theory focusing on drills and sentence patterns." },
+      { category: "Methodology & Approaches", term: "Silent Way", definition: "A humanistic method where the teacher remains as silent as possible encouraging students to produce language." },
+      { category: "Methodology & Approaches", term: "Suggestopedia", definition: "A method using relaxation music and positive suggestion to lower student anxiety." },
+      { category: "Methodology & Approaches", term: "Community Language Learning (CLL)", definition: "A method where the teacher acts as a counselor to help students communicate what they want to say." },
+      { category: "Methodology & Approaches", term: "Total Physical Response (TPR)", definition: "A method where students respond to language with physical actions." },
+      { category: "Methodology & Approaches", term: "Task-Based Learning (TBL)", definition: "A methodology where lessons are built around a central task (e.g. planning a trip)." },
+      { category: "Methodology & Approaches", term: "Lexical Approach", definition: "An approach that prioritizes vocabulary chunks and collocations over grammar rules." },
+      { category: "Methodology & Approaches", term: "PPP (Presentation Production Practice)", definition: "A traditional lesson structure: presenting language practicing it in a controlled way and producing it freely." },
+      { category: "Methodology & Approaches", term: "ESA (Engage Study Activate)", definition: "Jeremy Harmer’s lesson structure: engaging student interest studying language forms and activating language use." },
+      { category: "Methodology & Approaches", term: "Test-Teach-Test (TTT)", definition: "A lesson structure where the teacher first tests students' knowledge teaches the gaps and tests again." },
+      { category: "Methodology & Approaches", term: "Guided Discovery", definition: "An inductive approach where students are guided to discover grammar rules on their own." },
+      { category: "Methodology & Approaches", term: "Dogme", definition: "A movement in ELT that advocates teaching without published textbooks focusing instead on conversational communication." },
+      { category: "Methodology & Approaches", term: "Flipped Classroom", definition: "A pedagogical approach where students learn content at home (e.g. via video) and do homework/practice in class." },
+      { category: "Methodology & Approaches", term: "Blended Learning", definition: "A learning model that combines online digital media with traditional classroom methods." },
+
+      // 3. Language Systems (Grammar Lexis Phonology)
+      { category: "Language Systems", term: "Phonology", definition: "The study of the sound system of a language." },
+      { category: "Language Systems", term: "Phonetics", definition: "The study of the physical production and perception of speech sounds." },
+      { category: "Language Systems", term: "Phoneme", definition: "The smallest unit of sound that can distinguish one word from another (e.g. /p/ vs /b/)." },
+      { category: "Language Systems", term: "Allophone", definition: "A phonetic variation of a phoneme (e.g. the aspirated /p/ in 'pin' vs unaspirated /p/ in 'spin')." },
+      { category: "Language Systems", term: "Monophthong", definition: "A pure vowel sound with a single constant articulatory position (e.g. /i:/)." },
+      { category: "Language Systems", term: "Diphthong", definition: "A glide from one vowel sound to another within a single syllable (e.g. /aɪ/ as in 'my')." },
+      { category: "Language Systems", term: "Triphthong", definition: "A glide from one vowel to another and then to a third within a single syllable (e.g. /aʊə/ as in 'hour')." },
+      { category: "Language Systems", term: "Voiced Consonant", definition: "A speech sound produced with vocal cord vibration (e.g. /b/ /d/ /v/ /z/)." },
+      { category: "Language Systems", term: "Voiceless Consonant", definition: "A speech sound produced without vocal cord vibration (e.g. /p/ /t/ /f/ /s/)." },
+      { category: "Language Systems", term: "Intonation", definition: "The rise and fall of pitch in voice when speaking." },
+      { category: "Language Systems", term: "Word Stress", definition: "The emphasis placed on a specific syllable in a word (e.g. to-GE-ther)." },
+      { category: "Language Systems", term: "Sentence Stress", definition: "The emphasis placed on specific words within a sentence (usually content words)." },
+      { category: "Language Systems", term: "Elision", definition: "The disappearance of a sound in natural speech (e.g. 'next door' sounds like 'nex door')." },
+      { category: "Language Systems", term: "Assimilation", definition: "When a sound changes to become more like a neighboring sound (e.g. 'green bag' sounds like 'greem bag')." },
+      { category: "Language Systems", term: "Liaison / Linking", definition: "The linking of words in connected speech (e.g. inserting a /r/ sound in 'law and order')." },
+      { category: "Language Systems", term: "Schwa", definition: "The weak unstressed neutral vowel sound /ə/ (e.g. the 'a' in 'about')." },
+      { category: "Language Systems", term: "Minimal Pair", definition: "Two words that differ by only one sound (e.g. 'ship' and 'sheep')." },
+      { category: "Language Systems", term: "IPA (International Phonetic Alphabet)", definition: "A system of phonetic notation used to represent the sounds of spoken languages." },
+      { category: "Language Systems", term: "Morphology", definition: "The study of the structure and form of words." },
+      { category: "Language Systems", term: "Morpheme", definition: "The smallest grammatical unit of meaning (can be free like 'cat' or bound like '-s')." },
+      { category: "Language Systems", term: "Syntax", definition: "The rules governing word order and sentence structure." },
+      { category: "Language Systems", term: "Semantics", definition: "The study of meaning in language." },
+      { category: "Language Systems", term: "Pragmatics", definition: "The study of language use in context (how language is used in social situations)." },
+      { category: "Language Systems", term: "Lexis", definition: "The vocabulary of a language." },
+      { category: "Language Systems", term: "Collocation", definition: "Words that frequently go together naturally (e.g. 'make a decision' 'heavy rain')." },
+      { category: "Language Systems", term: "Idiom", definition: "A phrase whose meaning cannot be understood from the literal meanings of individual words (e.g. 'spill the beans')." },
+      { category: "Language Systems", term: "Phrasal Verb", definition: "A verb combined with an adverb or preposition to create a new meaning (e.g. 'look up' 'break down')." },
+      { category: "Language Systems", term: "Compound Word", definition: "A word made of two or more base words (e.g. 'classroom' 'blackboard')." },
+      { category: "Language Systems", term: "Synonym", definition: "A word with the same or similar meaning as another word." },
+      { category: "Language Systems", term: "Antonym", definition: "A word with the opposite meaning of another word." },
+      { category: "Language Systems", term: "Homophone", definition: "Words that sound the same but have different meanings and spellings (e.g. 'to' 'two' 'too')." },
+      { category: "Language Systems", term: "Homograph", definition: "Words that are spelled the same but have different meanings and sometimes different pronunciations (e.g. 'lead' verb vs 'lead' noun)." },
+      { category: "Language Systems", term: "Polysemy", definition: "When a single word has multiple related meanings (e.g. 'head' of a person vs 'head' of a company)." },
+      { category: "Language Systems", term: "Register", definition: "The level of formality in language used in a specific social context (formal informal casual)." },
+      { category: "Language Systems", term: "Genre", definition: "A specific type of text characterized by style form and content (e.g. formal letter news report essay)." },
+
+      // 4. Classroom Management & Classroom Dynamics
+      { category: "Classroom Management & Classroom Dynamics", term: "TTT (Teacher Talking Time)", definition: "The amount of time the teacher spends speaking in class." },
+      { category: "Classroom Management & Classroom Dynamics", term: "STT (Student Talking Time)", definition: "The amount of time students spend speaking in class." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Rapport", definition: "The relationship and mutual understanding between teacher and students." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Seating Arrangement", definition: "How chairs/desks are organized (U-shape rows groups) affecting interaction." },
+      { category: "Classroom Management & Classroom Dynamics", term: "CCQs (Concept Checking Questions)", definition: "Questions used to check if students understand the meaning of new language." },
+      { category: "Classroom Management & Classroom Dynamics", term: "ICQs (Instruction Checking Questions)", definition: "Questions used to check if students understand task instructions." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Modeling", definition: "Demonstrating a language pattern or behavior for students to copy." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Eliciting", definition: "Prompting students to provide information or language rather than giving it to them." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Board Work", definition: "Organizing information on the whiteboard clearly and effectively." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Icebreaker", definition: "A brief activity at the start of a course to help students get to know each other." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Peer Correction", definition: "When students correct each other's language errors." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Self-Correction", definition: "When a student corrects their own language error." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Echoing", definition: "When a teacher repeats what a student just said (often discouraged if done excessively)." },
+      { category: "Classroom Management & Classroom Dynamics", term: "Nominating", definition: "Choosing a specific student by name to answer a question." },
+
+      // 5. Assessment Error Correction & SLA
+      { category: "Assessment Error Correction & SLA", term: "Affective Filter", definition: "Stephen Krashen's theory of a psychological barrier (like anxiety low self-esteem or boredom) that can prevent input from reaching the language acquisition part of the brain." },
+      { category: "Assessment Error Correction & SLA", term: "Input (i+1)", definition: "Stephen Krashen’s theory that learners advance when they receive language input that is just one step beyond their current level." },
+      { category: "Assessment Error Correction & SLA", term: "Overgeneralization", definition: "When a learner applies a grammatical rule to situations where it doesn't fit (e.g. adding \"-ed\" to irregular verbs: \"I goed\")." },
+      { category: "Assessment Error Correction & SLA", term: "Interlanguage", definition: "The transitional language system developed by a learner who is in the process of acquiring a second language." },
+      { category: "Assessment Error Correction & SLA", term: "Fossilization", definition: "When an error becomes a permanent habit in a learner’s interlanguage." },
+      { category: "Assessment Error Correction & SLA", term: "Diagnostic Test", definition: "A test used to find out students' strengths and weaknesses before starting a course." },
+      { category: "Assessment Error Correction & SLA", term: "Placement Test", definition: "A test used to determine which class level is appropriate for a student." },
+      { category: "Assessment Error Correction & SLA", term: "Progress Test", definition: "A test given during a course to check how well students are learning the material." },
+      { category: "Assessment Error Correction & SLA", term: "Achievement Test", definition: "A test given at the end of a course to measure what students have learned." },
+      { category: "Assessment Error Correction & SLA", term: "Formative Assessment", definition: "Ongoing informal assessments to monitor student progress and guide future instruction." },
+      { category: "Assessment Error Correction & SLA", term: "Summative Assessment", definition: "Formal testing at the end of a course or module to measure cumulative learning (e.g. final exam)." },
+      { category: "Assessment Error Correction & SLA", term: "Washback Effect", definition: "The impact that testing has on teaching and learning (can be positive or negative)." },
+      { category: "Assessment Error Correction & SLA", term: "Direct Testing", definition: "A test that measures the exact skill being tested (e.g. speaking test for speaking skill)." },
+      { category: "Assessment Error Correction & SLA", term: "Indirect Testing", definition: "A test that measures abilities underlying a skill (e.g. multiple-choice grammar test to measure writing ability)." },
+      { category: "Assessment Error Correction & SLA", term: "Validity", definition: "The degree to which a test measures what it claims to measure." },
+      { category: "Assessment Error Correction & SLA", term: "Reliability", definition: "The consistency of test results (getting similar scores under similar conditions)." },
+      { category: "Assessment Error Correction & SLA", term: "Distractor", definition: "An incorrect option in a multiple-choice test question." },
+      { category: "Assessment Error Correction & SLA", term: "Error", definition: "A systematic mistake made by a learner because they do not know the correct rule." },
+      { category: "Assessment Error Correction & SLA", term: "Mistake", definition: "A slip or temporary lapse made by a learner who actually knows the correct rule." },
+      { category: "Assessment Error Correction & SLA", term: "L1 Interference", definition: "The negative influence of a learner's first language on their production of the target language." },
+
+      // 6. Lesson Planning & Materials
+      { category: "Lesson Planning & Materials", term: "LO (Learning Objective/Aims)", definition: "What the teacher wants the students to be able to do by the end of the lesson." },
+      { category: "Lesson Planning & Materials", term: "Anticipated Problems", definition: "A section in a lesson plan where the teacher predicts what students might struggle with (grammar behavior logistics)." },
+      { category: "Lesson Planning & Materials", term: "Suggested Solutions", definition: "The planned actions a teacher will take to solve the anticipated problems." },
+      { category: "Lesson Planning & Materials", term: "Realia", definition: "Real-life objects brought into the classroom to clarify meaning and make lessons more engaging (e.g. bringing actual fruit to a lesson about food)." },
+      { category: "Lesson Planning & Materials", term: "Coursebook", definition: "The primary textbook used for a language course." },
+      { category: "Lesson Planning & Materials", term: "Supplementary Materials", definition: "Extra worksheets games or videos used to enhance the primary textbook." },
+      { category: "Lesson Planning & Materials", term: "Warmer", definition: "An engaging activity at the start of the lesson designed to warm up students and activate schema." },
+      { category: "Lesson Planning & Materials", term: "Timeline", definition: "A visual diagram drawn on the board to help students understand verb tenses and time aspects." },
+      { category: "Lesson Planning & Materials", term: "Authentic Materials", definition: "Real-world texts not written for language learning (e.g. newspapers menus songs podcasts)." },
+      { category: "Lesson Planning & Materials", term: "Graded Materials", definition: "Texts adapted in language difficulty to suit a specific learner level." },
+      { category: "Lesson Planning & Materials", term: "Scaffold", definition: "Temporary support provided by a teacher to help a student complete a task they couldn't do alone." },
+      { category: "Lesson Planning & Materials", term: "Schema", definition: "A learner's pre-existing knowledge and experience about a topic." },
+      { category: "Lesson Planning & Materials", term: "Contextualization", definition: "Presenting new language in a meaningful situation or context rather than in isolation." },
+      { category: "Lesson Planning & Materials", term: "Drilling", definition: "Controlled oral practice of a language item through repetition." },
+      { category: "Lesson Planning & Materials", term: "Choral Drilling", definition: "When the entire class repeats a language item together in unison." },
+      { category: "Lesson Planning & Materials", term: "Individual Drilling", definition: "When individual students repeat a language item one by one." },
+      { category: "Lesson Planning & Materials", term: "Information Gap Activity", definition: "An activity where students must talk to each other to find missing information they need to complete a task." }
+    ];
+
+    const STUDY_CATEGORIES = [
+      { name: "Core Acronyms & Professional Terms", slug: "core" },
+      { name: "Methodology & Approaches", slug: "methodology" },
+      { name: "Language Systems", slug: "systems" },
+      { name: "Classroom Management & Classroom Dynamics", slug: "mgmt" },
+      { name: "Assessment Error Correction & SLA", slug: "sla" },
+      { name: "Lesson Planning & Materials", slug: "lesson" }
+    ];
+
+    // --- REBUILT COMPREHENSIVE SVG ICONS (Fixes Minified React Error #130) ---
+    const Icons = {
+      GraduationCap: () => <svg className="w-6 h-6 text-indigo-400 inline-block" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>,
+      Flame: () => <svg className="w-5 h-5 fill-amber-500 text-amber-500 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>,
+      BookOpen: () => <svg className="w-5 h-5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+      Sparkles: () => <svg className="w-5 h-5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>,
+      RotateCcw: () => <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 6H16" /></svg>,
+      CheckCircle2: () => <svg className="w-5 h-5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      XCircle: () => <svg className="w-5 h-5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      ArrowRight: () => <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>,
+      ChevronRight: () => <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>,
+      Download: () => <svg className="w-5 h-5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
+      Check: () => <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
+      Help: () => <svg className="w-5 h-5 inline-block text-rose-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
+      Monitor: () => <svg className="w-3.5 h-3.5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+      Tablet: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>,
+      Smartphone: () => <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>,
+      Eye: () => <svg className="w-3.5 h-3.5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
+      EyeOff: () => <svg className="w-3.5 h-3.5 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
+    };
+
+    function App() {
+      const [glossary, setGlossary] = useState(DEFAULT_GLOSSARY);
+      const [activeScreen, setActiveScreen] = useState('dashboard'); // 'dashboard', 'flashcard', 'quiz-mc', 'quiz-fib', 'upload'
+      const [selectedCategory, setSelectedCategory] = useState('all');
+      
+      const [viewportMode, setViewportMode] = useState('desktop'); 
+      const [wireframeOverlay, setWireframeOverlay] = useState(false);
+
+      // Quiz Module (Multiple Choice) States
+      const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizFeedbackMode, setQuizFeedbackMode] = useState(false);
+      const [hasAnsweredCurrent, setHasAnsweredCurrent] = useState(false);
+      
+      // New MC second opportunity state variables
+      const [attemptsCount, setAttemptsCount] = useState(0); // tracks number of failed attempts on current question
+      const [wrongAnswersList, setWrongAnswersList] = useState([]); // tracks definitions guessed wrong on current question
+      const [explanationPrompt, setExplanationPrompt] = useState('');
+      const [showCelebration, setShowCelebration] = useState(false);
+      const [celebrationSparks, setCelebrationSparks] = useState([]);
+
+      // Fill in the Blank States
+      const [fibIndex, setFibIndex] = useState(0);
+      const [fibAnswer, setFibAnswer] = useState('');
+      const [fibFeedback, setFibFeedback] = useState(null); // 'correct', 'incorrect'
+
+      // Flashcard (Cards) States
+      const [currentCardIndex, setCurrentCardIndex] = useState(0);
+      const [isFlipped, setIsFlipped] = useState(false);
+      const [srsHistory, setSrsHistory] = useState([]);
+
+      // CSV Status State
+      const [csvStatus, setCsvStatus] = useState({ success: null, message: '' });
+
+      // Filtered Glossary based on user selection
+      const filteredGlossary = useMemo(() => {
+        if (selectedCategory === 'all') return glossary;
+        return glossary.filter(item => {
+          if (selectedCategory === 'core') return item.category.includes('Acronyms');
+          if (selectedCategory === 'methodology') return item.category.includes('Methodology');
+          if (selectedCategory === 'systems') return item.category.includes('Systems');
+          if (selectedCategory === 'mgmt') return item.category.includes('Management');
+          if (selectedCategory === 'sla') return item.category.includes('Assessment');
+          if (selectedCategory === 'lesson') return item.category.includes('Lesson');
+          return true;
+        });
+      }, [glossary, selectedCategory]);
+
+      // Synth Triump Fanfare Sound Creator with HTML5 Web Audio API
+      const playTrumpetFanfare = () => {
+        try {
+          const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtxClass) return;
+          const ctx = new AudioCtxClass();
+          
+          const playNote = (frequency, startDelay, length) => {
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            // Sawtooth waves recreate a bright, brassy trumpet timbre
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(frequency, startDelay);
+            
+            gainNode.gain.setValueAtTime(0, startDelay);
+            gainNode.gain.linearRampToValueAtTime(0.12, startDelay + 0.04);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, startDelay + length);
+            
+            // Brassy lowpass filter curve
+            const lowpass = ctx.createBiquadFilter();
+            lowpass.type = 'lowpass';
+            lowpass.frequency.setValueAtTime(2200, startDelay);
+            lowpass.frequency.exponentialRampToValueAtTime(600, startDelay + length);
+            
+            osc.connect(lowpass);
+            lowpass.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            osc.start(startDelay);
+            osc.stop(startDelay + length);
+          };
+          
+          const now = ctx.currentTime;
+          // Majestic rapid ascending trumpet chords
+          playNote(392.00, now, 0.12);        // G4
+          playNote(493.88, now + 0.10, 0.12); // B4
+          playNote(587.33, now + 0.20, 0.12); // D5
+          playNote(783.99, now + 0.30, 0.45); // G5 (Bright, sustained root note)
+          
+          // Add complementary lower brass harmony lines
+          playNote(392.00, now + 0.30, 0.45); // G4
+          playNote(587.33, now + 0.30, 0.45); // D5
+        } catch (error) {
+          console.warn("Audio synthesis block failed:", error);
+        }
+      };
+
+      // Trigger Confetti Spark Emitter state
+      const triggerCelebrationSparks = () => {
+        const particles = [];
+        for (let i = 0; i < 40; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 80 + Math.random() * 150;
+          particles.push({
+            id: i,
+            color: ["#10B981", "#6366F1", "#F59E0B", "#EF4444", "#EC4899"][Math.floor(Math.random() * 5)],
+            tx: `${Math.cos(angle) * distance}px`,
+            ty: `${Math.sin(angle) * distance}px`,
+            size: `${5 + Math.random() * 10}px`,
+            delay: `${Math.random() * 0.15}s`
+          });
+        }
+        setCelebrationSparks(particles);
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 1400);
+      };
+
+      // Find which term is mapped to a specific definition to create dynamic wrong-answer guides
+      const getMeaningTermOfDefinition = (definitionStr) => {
+        const matchingItem = glossary.find(item => item.definition === definitionStr);
+        return matchingItem ? matchingItem.term : "another ELT concept";
+      };
+
+      // Spaced Repetition (SRS) Flashcard Action
+      const handleSrsAction = (feedbackLevel) => {
+        setIsFlipped(false);
+        setSrsHistory(prev => [...prev, { term: filteredGlossary[currentCardIndex]?.term, grade: feedbackLevel }]);
+        setTimeout(() => {
+          setCurrentCardIndex((prev) => (prev + 1) % filteredGlossary.length);
+        }, 200);
+      };
+
+      // Multiple Choice Option Generation
+      const mcQuizItem = useMemo(() => {
+        if (filteredGlossary.length === 0) return null;
+        const index = currentQuizIndex % filteredGlossary.length;
+        const correct = filteredGlossary[index];
+        
+        // Pick random incorrect distractors from the rest of the database
+        const pool = glossary.filter(i => i.term !== correct.term);
+        const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+        const distractors = shuffledPool.slice(0, 3).map(i => i.definition);
+        
+        const options = [correct.definition, ...distractors].sort();
+        
+        return {
+          term: correct.term,
+          category: correct.category,
+          correctDefinition: correct.definition,
+          options: options
+        };
+      }, [filteredGlossary, glossary, currentQuizIndex]);
+
+      // Fill in the Blank sentence generation
+      const fibQuizItem = useMemo(() => {
+        if (filteredGlossary.length === 0) return null;
+        const index = fibIndex % filteredGlossary.length;
+        const item = filteredGlossary[index];
+        return {
+          term: item.term,
+          definition: item.definition,
+          category: item.category
+        };
+      }, [filteredGlossary, fibIndex]);
+
+      const handleMcAnswer = (option) => {
+        if (hasAnsweredCurrent) return; // Completely completed & locked
+
+        if (option === mcQuizItem.correctDefinition) {
+          // CORRECT ANSWER Selected
+          setQuizScore(prev => prev + 1);
+          setHasAnsweredCurrent(true);
+          setQuizFeedbackMode(true);
+          setExplanationPrompt(`Brilliant! That is absolutely correct.`);
+          playTrumpetFanfare();
+          triggerCelebrationSparks();
+        } else {
+          // WRONG ANSWER Selected
+          const describedConcept = getMeaningTermOfDefinition(option);
+          
+          if (attemptsCount === 0) {
+            // First Wrong Try -> Trigger 2nd opportunity
+            setAttemptsCount(1);
+            setWrongAnswersList(prev => [...prev, option]);
+            setExplanationPrompt(`Not quite! This description actually defines "${describedConcept}". You have one more chance to find the correct answer!`);
+          } else {
+            // Second Wrong Try -> Lock option, reveal correct
+            setAttemptsCount(2);
+            setWrongAnswersList(prev => [...prev, option]);
+            setHasAnsweredCurrent(true);
+            setQuizFeedbackMode(true);
+            setExplanationPrompt(`Incorrect. This second choice describes "${describedConcept}". The correct definition is highlighted in green.`);
+          }
+        }
+      };
+
+      const handleNextMc = () => {
+        setHasAnsweredCurrent(false);
+        setQuizFeedbackMode(false);
+        setSelectedOption(null);
+        setAttemptsCount(0);
+        setWrongAnswersList([]);
+        setExplanationPrompt('');
+        setCurrentQuizIndex(prev => (prev + 1) % filteredGlossary.length);
+      };
+
+      const handleFibSubmit = () => {
+        const isCorrect = fibAnswer.trim().toLowerCase() === fibQuizItem.term.trim().toLowerCase();
+        setFibFeedback(isCorrect ? 'correct' : 'incorrect');
+        if (isCorrect) {
+          playTrumpetFanfare();
+          triggerCelebrationSparks();
+        }
+      };
+
+      const handleNextFib = () => {
+        setFibAnswer('');
+        setFibFeedback(null);
+        setFibIndex(prev => (prev + 1) % filteredGlossary.length);
+      };
+
+      // Dynamic CSV Parser
+      const handleCsvUpload = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            const parsed = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line) continue;
+              
+              let parts = [];
+              let current = '';
+              let insideQuote = false;
+              
+              for (let char of line) {
+                if (char === '"') {
+                  insideQuote = !insideQuote;
+                } else if (char === ',' && !insideQuote) {
+                  parts.push(current);
+                  current = '';
+                } else {
+                  current += char;
+                }
+              }
+              parts.push(current);
+
+              if (parts.length >= 3) {
+                parsed.push({
+                  category: parts[0].replace(/"/g, '').trim(),
+                  term: parts[1].replace(/"/g, '').trim(),
+                  definition: parts[2].replace(/"/g, '').trim()
+                });
+              }
+            }
+
+            if (parsed.length > 0) {
+              setGlossary(parsed);
+              setCsvStatus({ success: true, message: `Loaded ${parsed.length} items from CSV!` });
+              setCurrentCardIndex(0);
+              setCurrentQuizIndex(0);
+              setFibIndex(0);
+              setAttemptsCount(0);
+              setWrongAnswersList([]);
+              setExplanationPrompt('');
+            } else {
+              setCsvStatus({ success: false, message: "Columns mismatch. Format must be: Category,Term,Definition" });
+            }
+          } catch (err) {
+            setCsvStatus({ success: false, message: "Error parsing CSV file." });
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative overflow-x-hidden">
+          
+          {/* Confetti Sparks overlay display element */}
+          {showCelebration && (
+            <div className="absolute inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden">
+              <div className="relative w-1 h-1">
+                {celebrationSparks.map(spark => (
+                  <div
+                    key={spark.id}
+                    className="absolute rounded-full animate-spark"
+                    style={{
+                      backgroundColor: spark.color,
+                      width: spark.size,
+                      height: spark.size,
+                      "--tx": spark.tx,
+                      "--ty": spark.ty,
+                      animationDelay: spark.delay,
+                      transform: "translate(-50%, -50%)"
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Header Space */}
+          <header className="border-b border-slate-800 bg-slate-950 px-6 py-4 flex flex-wrap justify-between items-center gap-4 sticky top-0 z-50 shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-indigo-600 rounded-xl text-white shadow-lg">
+                <Icons.GraduationCap />
+              </div>
+              <div>
+                <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                  ELT Jargon Master <span className="text-xs bg-indigo-500/10 text-indigo-400 font-bold px-2 py-0.5 rounded-full border border-indigo-500/20 font-mono">STUDENT CENTER</span>
+                </h1>
+                <p className="text-xs text-slate-400">The premier English Language Teaching professional jargon training platform</p>
+              </div>
+            </div>
+
+            {/* Layout Emulator Switcher */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                <span className="text-[10px] text-slate-400 px-2 font-bold uppercase">Canvas Size:</span>
+                <button 
+                  onClick={() => setViewportMode('desktop')}
+                  className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${viewportMode === 'desktop' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                >
+                  <Icons.Monitor />
+                  <span className="hidden md:inline">Desktop</span>
+                </button>
+                <button 
+                  onClick={() => setViewportMode('tablet')}
+                  className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${viewportMode === 'tablet' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                >
+                  <Icons.Tablet />
+                  <span className="hidden md:inline">Tablet</span>
+                </button>
+                <button 
+                  onClick={() => setViewportMode('mobile')}
+                  className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${viewportMode === 'mobile' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                >
+                  <Icons.Smartphone />
+                  <span className="hidden md:inline">Mobile</span>
+                </button>
+              </div>
+
+              {/* Wireframe blueprints visual overlay */}
+              <button 
+                onClick={() => setWireframeOverlay(!wireframeOverlay)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all ${wireframeOverlay ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'}`}
+              >
+                {wireframeOverlay ? <Icons.EyeOff /> : <Icons.Eye />}
+                <span className="hidden sm:inline">{wireframeOverlay ? "Hide Blueprint Guides" : "Show Blueprint Guides"}</span>
+              </button>
+              
+              <div className="flex items-center gap-2 text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 font-bold text-xs">
+                <Icons.Flame />
+                <span>Streak: 12 Days</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Main workspace Splitter */}
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            
+            {/* Left side: Interactive Student Workspace Canvas */}
+            <section className="flex-1 p-6 bg-slate-950 flex flex-col items-center justify-start overflow-y-auto border-r border-slate-800">
+              
+              {/* Scaled frame for different viewports */}
+              <div className={`transition-all duration-300 w-full flex-1 flex flex-col ${
+                viewportMode === 'desktop' ? 'max-w-full' : 
+                viewportMode === 'tablet' ? 'max-w-[768px] aspect-[4/3] border-4 border-slate-800 rounded-[32px] p-3 bg-slate-900 shadow-xl' : 
+                'max-w-[340px] aspect-[9/19] border-8 border-slate-800 rounded-[44px] p-2.5 bg-slate-900 shadow-2xl relative'
+              }`}>
+                
+                {/* Simulated Device/Web Workspace */}
+                <div className="w-full flex-1 rounded-2xl bg-[#f8fafc] text-slate-900 overflow-hidden flex flex-col relative min-h-[550px]">
+                  
+                  {/* Grid safe area indicators */}
+                  {wireframeOverlay && (
+                    <div className="absolute inset-0 pointer-events-none z-50 border-4 border-dashed border-rose-500/30">
+                      <div className="absolute top-0 left-6 right-6 h-full border-l border-r border-rose-500/10"></div>
+                      <div className="absolute top-2 left-2 bg-rose-500 text-white text-[9px] font-mono px-1.5 py-0.5 rounded uppercase shadow">
+                        Safe Layout Zone (Padding: 24px)
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top Student Tab switcher */}
+                  <div className="bg-[#0f172a] text-white px-6 py-4 flex justify-between items-center shrink-0 border-b border-slate-800">
+                    <span className="text-xs font-extrabold tracking-wider text-indigo-400 font-mono flex items-center gap-1.5">
+                      <Icons.BookOpen />
+                      <span>LEARNER DESK</span>
+                    </span>
+
+                    <div className="flex gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                      <button 
+                        onClick={() => { setActiveScreen('dashboard'); setIsFlipped(false); }} 
+                        className={`text-[10px] md:text-xs px-3.5 py-1.5 rounded-md font-bold transition-all ${activeScreen === 'dashboard' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        Home
+                      </button>
+                      <button 
+                        onClick={() => { setActiveScreen('flashcard'); setIsFlipped(false); }} 
+                        className={`text-[10px] md:text-xs px-3.5 py-1.5 rounded-md font-bold transition-all ${activeScreen === 'flashcard' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        Cards
+                      </button>
+                      <button 
+                        onClick={() => { setActiveScreen('quiz-mc'); }} 
+                        className={`text-[10px] md:text-xs px-3.5 py-1.5 rounded-md font-bold transition-all ${activeScreen === 'quiz-mc' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        MC Quiz
+                      </button>
+                      <button 
+                        onClick={() => { setActiveScreen('quiz-fib'); }} 
+                        className={`text-[10px] md:text-xs px-3.5 py-1.5 rounded-md font-bold transition-all ${activeScreen === 'quiz-fib' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        FIB Quiz
+                      </button>
+                      <button 
+                        onClick={() => { setActiveScreen('upload'); }} 
+                        className={`text-[10px] md:text-xs px-3.5 py-1.5 rounded-md font-bold transition-all ${activeScreen === 'upload' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        Import CSV
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Active Category Filter Header inside the Learner Desk */}
+                  <div className="bg-slate-100 px-6 py-2 border-b flex justify-between items-center text-xs text-slate-500 font-bold">
+                    <span>Category Filter:</span>
+                    <select 
+                      value={selectedCategory} 
+                      onChange={(e) => {
+                        setSelectedCategory(e.target.value);
+                        setCurrentCardIndex(0);
+                        setCurrentQuizIndex(0);
+                        setFibIndex(0);
+                        setAttemptsCount(0);
+                        setWrongAnswersList([]);
+                        setExplanationPrompt('');
+                      }}
+                      className="bg-white border rounded px-2 py-1 text-slate-800 focus:outline-none"
+                    >
+                      <option value="all">All Domains ({glossary.length} items)</option>
+                      <option value="core">Core Acronyms</option>
+                      <option value="methodology">Methodology & Approaches</option>
+                      <option value="systems">Language Systems</option>
+                      <option value="mgmt">Classroom Management</option>
+                      <option value="sla">Assessment & SLA</option>
+                      <option value="lesson">Lesson Planning & Materials</option>
+                    </select>
+                  </div>
+
+                  {/* SCREEN 1: STUDENT HOME / DASHBOARD */}
+                  {activeScreen === 'dashboard' && (
+                    <div className="flex-1 flex flex-col bg-slate-50 overflow-y-auto p-6 gap-6">
+                      
+                      {/* Active review focus card callout */}
+                      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl shadow-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="space-y-1.5 z-10 max-w-lg">
+                          <span className="text-[10px] bg-teal-400 text-slate-950 font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono">Spaced Repetition Active</span>
+                          <h2 className="text-xl md:text-2xl font-black tracking-tight text-white">Daily Retention Suite</h2>
+                          <p className="text-xs text-indigo-200">Test and master professional ELT terminology and teaching methodologies scheduled for today.</p>
+                        </div>
+
+                        <button 
+                          onClick={() => setActiveScreen('flashcard')}
+                          className="bg-teal-400 hover:bg-teal-300 text-slate-950 px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow hover:shadow-lg self-start md:self-auto"
+                        >
+                          <Icons.Sparkles />
+                          <span>Review Now</span>
+                        </button>
+                      </div>
+
+                      {/* Categories grid populated by user's active CSV data */}
+                      <div>
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">ELT Subfield Categories Grid</h3>
+                          <span className="text-xs text-indigo-600 font-bold">Active Domains</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                          {STUDY_CATEGORIES.map((cat, idx) => {
+                            return (
+                              <div 
+                                key={idx}
+                                onClick={() => {
+                                  setSelectedCategory(cat.slug);
+                                  setActiveScreen('flashcard');
+                                }}
+                                className={`p-4 rounded-xl border bg-white hover:shadow-md cursor-pointer transition-all flex flex-col justify-between min-h-[110px] border-slate-100 hover:border-indigo-100`}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                                    {idx + 1}
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3">
+                                  <span className="text-xs font-black text-slate-900 leading-tight block">
+                                    {cat.name}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* SCREEN 2: DIGITAL FLASHCARDS */}
+                  {activeScreen === 'flashcard' && (
+                    <div className="flex-1 flex flex-col bg-slate-50 p-6 justify-between gap-6">
+                      
+                      <div className="flex justify-between items-center border-b pb-3 border-slate-100">
+                        <button 
+                          onClick={() => setActiveScreen('dashboard')}
+                          className="text-slate-500 hover:text-slate-900 text-xs font-bold flex items-center gap-1"
+                        >
+                          <Icons.ChevronRight className="rotate-180" /> Back to Dashboard
+                        </button>
+                        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
+                          Card {filteredGlossary.length > 0 ? currentCardIndex + 1 : 0} of {filteredGlossary.length}
+                        </span>
+                      </div>
+
+                      {filteredGlossary.length > 0 ? (
+                        <div className="max-w-xl w-full mx-auto my-auto">
+                          <div 
+                            onClick={() => setIsFlipped(!isFlipped)}
+                            className={`min-h-[280px] bg-white rounded-3xl border-2 cursor-pointer transition-all duration-300 p-6 flex flex-col justify-between shadow-sm relative hover:shadow-md ${isFlipped ? 'border-teal-400' : 'border-slate-100 hover:border-indigo-100'}`}
+                          >
+                            <span className="text-[10px] uppercase font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full self-start">
+                              {filteredGlossary[currentCardIndex]?.category}
+                            </span>
+
+                            {/* Front View */}
+                            {!isFlipped ? (
+                              <div className="flex-1 flex flex-col justify-center items-center text-center my-6">
+                                <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                                  {filteredGlossary[currentCardIndex]?.term}
+                                </h2>
+                                <div className="mt-4 flex items-center gap-1.5 px-3 py-1 bg-slate-50 border rounded-full">
+                                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Tap card area to flip & reveal meaning</span>
+                                </div>
+                              </div>
+                            ) : (
+                              // Back View
+                              <div className="flex-1 flex flex-col justify-center items-start text-left my-4">
+                                <div className="border-b pb-1 mb-2.5 w-full flex justify-between items-center">
+                                  <span className="text-sm font-black text-slate-900">{filteredGlossary[currentCardIndex]?.term}</span>
+                                  <span className="text-[9px] text-teal-600 font-black bg-teal-50 px-2 py-0.5 rounded-full uppercase">Definition Unlocked</span>
+                                </div>
+                                
+                                <p className="text-sm font-bold text-slate-800 leading-snug mb-3">
+                                  {filteredGlossary[currentCardIndex]?.definition}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="text-center text-[10px] text-slate-400 font-bold border-t pt-3 flex justify-center items-center gap-1.5">
+                              <Icons.RotateCcw />
+                              <span>Interactive Learning Card Canvas</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center my-auto">
+                          <Icons.Help />
+                          <p className="mt-2 text-slate-500 font-bold">No terms found for this category filter.</p>
+                        </div>
+                      )}
+
+                      {/* SRS Recall feedback grading */}
+                      {filteredGlossary.length > 0 && (
+                        <div className="bg-white p-4 rounded-2xl border border-slate-100 max-w-xl w-full mx-auto">
+                          <span className="text-center text-[9px] text-slate-400 uppercase font-black tracking-widest block mb-2.5">Rate recall difficulty (Spaced Repetition System)</span>
+                          <div className="grid grid-cols-3 gap-3">
+                            <button 
+                              onClick={() => handleSrsAction('Hard')}
+                              className="py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl font-bold text-xs transition-all active:scale-95"
+                            >
+                              Hard (Repeat soon)
+                            </button>
+                            <button 
+                              onClick={() => handleSrsAction('Good')}
+                              className="py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 rounded-xl font-bold text-xs transition-all active:scale-95"
+                            >
+                              Good (Review tomorrow)
+                            </button>
+                            <button 
+                              onClick={() => handleSrsAction('Easy')}
+                              className="py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-xl font-bold text-xs transition-all active:scale-95"
+                            >
+                              Easy (Fully Mastered)
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+
+                  {/* SCREEN 3: MC QUIZ MODULE */}
+                  {activeScreen === 'quiz-mc' && (
+                    <div className="flex-1 flex flex-col bg-slate-50 text-slate-900 p-6 justify-between gap-6 overflow-y-auto">
+                      
+                      <div>
+                        <div className="flex justify-between items-center text-xs font-black text-slate-400 mb-2">
+                          <span className="uppercase tracking-widest text-indigo-600 font-mono">Pedagogical Assessment Module</span>
+                          <span>Question {filteredGlossary.length > 0 ? (currentQuizIndex % filteredGlossary.length) + 1 : 0} of {filteredGlossary.length}</span>
+                        </div>
+                        
+                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-indigo-600 transition-all duration-300" style={{ width: `${filteredGlossary.length > 0 ? (((currentQuizIndex % filteredGlossary.length) + 1) / filteredGlossary.length) * 100 : 0}%` }}></div>
+                        </div>
+                      </div>
+
+                      {mcQuizItem ? (
+                        <div className="max-w-2xl w-full mx-auto my-auto flex flex-col gap-4">
+                          
+                          <div className="bg-white p-5 rounded-2xl border border-slate-100 text-center shadow-sm relative">
+                            <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider block mb-1">What is the correct definition for the term:</span>
+                            <h2 className="text-xl font-black text-indigo-950">{mcQuizItem.term}</h2>
+                            <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold">{mcQuizItem.category}</p>
+                          </div>
+
+                          {/* Options Stack showcasing: Default, Active/Selected, and Correct states explicitly */}
+                          <div className="flex flex-col gap-3">
+                            {mcQuizItem.options.map((option, idx) => {
+                              const isSelected = selectedOption === option;
+                              const isCorrect = option === mcQuizItem.correctDefinition;
+                              const isWrongGuess = wrongAnswersList.includes(option);
+                              
+                              let optionStyle = "border-slate-200 bg-white text-slate-700 hover:border-indigo-200 cursor-pointer";
+                              let stateLabel = "Default state";
+                              let checkIcon = null;
+
+                              // Handle visual styles based on correct/incorrect status and user attempts
+                              if (isWrongGuess) {
+                                // WRONG/SELECTED STATE
+                                optionStyle = "border-rose-400 bg-rose-50 text-rose-950 opacity-60 cursor-not-allowed pointer-events-none";
+                                stateLabel = "Incorrect guess";
+                                checkIcon = <span className="p-1 bg-rose-500 rounded-full text-white text-[8px] font-bold"><Icons.XCircle /></span>;
+                              } else if (hasAnsweredCurrent) {
+                                // Locked state once completely answered
+                                if (isCorrect) {
+                                  optionStyle = "border-emerald-500 bg-emerald-50 text-emerald-950 font-bold pointer-events-none";
+                                  stateLabel = "Correct Answer";
+                                  checkIcon = <span className="p-1 bg-emerald-500 rounded-full text-white"><Icons.Check /></span>;
+                                } else {
+                                  optionStyle = "border-slate-100 bg-white opacity-40 text-slate-400 pointer-events-none";
+                                  stateLabel = "Unselected option";
+                                }
+                              } else if (isSelected) {
+                                optionStyle = "border-indigo-500 bg-indigo-50 text-indigo-950 font-bold ring-2 ring-indigo-500/10";
+                                stateLabel = "Selected / Active state";
+                              }
+
+                              return (
+                                <div 
+                                  key={idx}
+                                  onClick={() => handleMcAnswer(option)}
+                                  className={`p-3.5 rounded-xl border-2 text-xs text-left relative transition-colors flex justify-between items-center ${optionStyle}`}
+                                >
+                                  <div className="max-w-[85%]">
+                                    <span className="font-semibold block">{option}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[7px] font-bold px-1 rounded uppercase tracking-wider font-mono bg-slate-100 text-slate-500">
+                                      {stateLabel}
+                                    </span>
+                                    {checkIcon}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Dynamic Feedback Explanation box */}
+                          {explanationPrompt && (
+                            <div className={`p-4 rounded-xl border-2 text-xs leading-relaxed transition-all ${
+                              hasAnsweredCurrent && !wrongAnswersList.includes(mcQuizItem.correctDefinition) && attemptsCount < 2
+                                ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                                : 'bg-amber-50 border-amber-300 text-amber-950'
+                            }`}>
+                              <span className="font-bold uppercase tracking-wider block mb-1">
+                                {hasAnsweredCurrent ? "Feedback & Insights:" : "Opportunity Hint:"}
+                              </span>
+                              <p>{explanationPrompt}</p>
+                            </div>
+                          )}
+
+                        </div>
+                      ) : (
+                        <div className="text-center my-auto">
+                          <Icons.Help />
+                          <p className="mt-2 text-slate-500 font-bold">No questions available for this category filter.</p>
+                        </div>
+                      )}
+
+                      {/* Quiz Progress Footer */}
+                      <div className="mt-auto border-t pt-3 flex justify-between items-center">
+                        <div className="text-left">
+                          <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Practice Run Score</span>
+                          <span className="text-sm font-black text-slate-900">{quizScore} Correct</span>
+                        </div>
+
+                        {(hasAnsweredCurrent || attemptsCount >= 2) && (
+                          <button 
+                            onClick={handleNextMc}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs flex items-center gap-1 transition-all"
+                          >
+                            <span>Next Question</span>
+                            <Icons.ArrowRight />
+                          </button>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* SCREEN 4: FILL IN THE BLANK */}
+                  {activeScreen === 'quiz-fib' && (
+                    <div className="flex-1 flex flex-col bg-slate-50 text-slate-900 p-6 justify-between gap-6 overflow-y-auto">
+                      
+                      <div>
+                        <div className="flex justify-between items-center text-xs font-black text-slate-400 mb-2">
+                          <span className="uppercase tracking-widest text-teal-600 font-mono">Active Concept Placement</span>
+                          <span>Contextual Vocabulary Usage</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full">
+                          <div className="w-[60%] h-full bg-teal-500 rounded-full"></div>
+                        </div>
+                      </div>
+
+                      {fibQuizItem ? (
+                        <div className="max-w-xl w-full mx-auto my-auto flex flex-col gap-4">
+                          
+                          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block mb-2">Fill in the blank with the correct acronym or jargon term:</span>
+                            <p className="text-sm font-semibold text-slate-800 leading-relaxed">
+                              "The definition: <span className="text-indigo-600 font-bold">'{fibQuizItem.definition}'</span> corresponds to the pedagogical term <span className="bg-indigo-50 border border-dashed border-indigo-300 text-indigo-700 font-mono px-2 py-0.5 rounded">[ _____ ]</span>."
+                            </p>
+                          </div>
+
+                          {/* Text placement input field */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-black text-slate-400 uppercase">Input exact acronym or term:</label>
+                            <input 
+                              type="text"
+                              value={fibAnswer}
+                              onChange={(e) => setFibAnswer(e.target.value)}
+                              placeholder="Type the matching concept..."
+                              disabled={fibFeedback !== null}
+                              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none text-xs font-bold text-slate-800 bg-white"
+                            />
+                          </div>
+
+                          {/* Interactive Hint Tiles */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[9px] text-slate-400 font-bold uppercase">Click tile hint to autofill input:</span>
+                            <button 
+                              onClick={() => { if (!fibFeedback) setFibAnswer(fibQuizItem.term); }}
+                              className="px-3 py-1 bg-slate-200 hover:bg-indigo-100 text-[10px] font-bold text-slate-700 rounded-lg"
+                            >
+                              {fibQuizItem.term}
+                            </button>
+                            <button 
+                              onClick={() => { if (!fibFeedback) setFibAnswer('ELT'); }}
+                              className="px-3 py-1 bg-slate-200 hover:bg-indigo-100 text-[10px] font-bold text-slate-700 rounded-lg"
+                            >
+                              ELT
+                            </button>
+                          </div>
+
+                          {/* Evaluation Feedback Container */}
+                          {fibFeedback && (
+                            <div className={`p-4 rounded-xl border text-xs ${fibFeedback === 'correct' ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-rose-50 border-rose-200 text-rose-950'}`}>
+                              <div className="flex items-center gap-1.5 font-bold mb-1">
+                                {fibFeedback === 'correct' ? <span className="text-emerald-600"><Icons.CheckCircle2 /></span> : <span className="text-rose-600"><Icons.XCircle /></span>}
+                                <span>{fibFeedback === 'correct' ? 'Concept Successfully Identified!' : 'Mismatch detected'}</span>
+                              </div>
+                              <p className="leading-relaxed opacity-95">
+                                {fibFeedback === 'correct' ? `Great job! You mapped "${fibQuizItem.term}" perfectly to its definition.` : `The correct missing term is "${fibQuizItem.term}".`}
+                              </p>
+                            </div>
+                          )}
+
+                        </div>
+                      ) : (
+                        <div className="text-center my-auto">
+                          <Icons.Help />
+                          <p className="mt-2 text-slate-500 font-bold">No items available for this category filter.</p>
+                        </div>
+                      )}
+
+                      {/* Form Verification Submission */}
+                      {filteredGlossary.length > 0 && (
+                        <div className="mt-auto border-t pt-3 flex justify-end gap-2">
+                          {fibFeedback === null ? (
+                            <button
+                              onClick={handleFibSubmit}
+                              disabled={!fibAnswer.trim()}
+                              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-colors disabled:opacity-50"
+                            >
+                              Validate Answers
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleNextFib}
+                              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs transition-colors"
+                            >
+                              Next Term
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+
+                  {/* SCREEN 5: CSV LOADER */}
+                  {activeScreen === 'upload' && (
+                    <div className="flex-1 flex flex-col bg-slate-50 text-slate-900 p-6 justify-between gap-6 overflow-y-auto">
+                      <div className="max-w-xl w-full mx-auto my-auto flex flex-col gap-6">
+                        <div>
+                          <h2 className="text-lg font-black text-slate-900 mb-1">Load Custom Vocabulary Dataset</h2>
+                          <p className="text-xs text-slate-500 leading-relaxed">
+                            To load more vocabulary, simply export your spreadsheet of terms in Comma-Separated Values (.csv) format and import it here. All flashcards and test systems will dynamically reprogram locally.
+                          </p>
+                        </div>
+
+                        {/* Columns Guide Sheet */}
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 text-xs font-mono">
+                          <span className="font-bold text-indigo-600 block mb-2">Expected Columns Scheme:</span>
+                          <code className="text-[11px] text-slate-600 block bg-slate-50 p-2.5 rounded border border-slate-200 overflow-x-auto whitespace-pre leading-normal">
+                            Category,Term,Definition{"\n"}
+                            Core Acronyms,ELT,English Language Teaching{"\n"}
+                            Methodology,CLIL,Content and Language Learning
+                          </code>
+                        </div>
+
+                        {/* Drag and Drop Zone */}
+                        <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 transition-all rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-white cursor-pointer relative">
+                          <input 
+                            type="file" 
+                            accept=".csv"
+                            onChange={handleCsvUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                          <span className="text-slate-400"><Icons.Download /></span>
+                          <span className="text-xs font-bold text-slate-700">Drag or click to choose local CSV file</span>
+                          <span className="text-[10px] text-slate-400">Fast local parsing. No database servers contacted.</span>
+                        </div>
+
+                        {/* Status Log Banner */}
+                        {csvStatus.success !== null && (
+                          <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 ${csvStatus.success ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'}`}>
+                            {csvStatus.success ? <span className="text-emerald-600"><Icons.CheckCircle2 /></span> : <span className="text-rose-600"><Icons.XCircle /></span>}
+                            <div>
+                              <span className="font-bold block">{csvStatus.success ? 'Sync Successful!' : 'Sync Failed'}</span>
+                              <p className="text-[11px] mt-0.5 opacity-90">{csvStatus.message}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            </section>
+
+          </div>
+
+          {/* Persistent Footer block */}
+          <footer className="bg-slate-950 border-t border-slate-800 p-4 px-6 flex justify-between items-center flex-wrap gap-4 shrink-0 text-slate-500 text-xs">
+            <p>ELT Student Study Suite — Interactive Jargon Master Module © 2026</p>
+            <p className="font-mono">Loaded database: {glossary.length} unique pedagogical concepts active</p>
+          </footer>
+
+        </div>
+      );
+    }
+
+    // Mount core app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+
+</body>
+</html>
